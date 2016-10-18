@@ -1,7 +1,8 @@
 #include <iostream>
 #include "SDL.h"
+#include <vector>
 
-using namespace std;
+//using namespace std;
 
 #define fps 60
 #define window_width 400
@@ -38,8 +39,87 @@ public:
     SDL_BlitSurface(image, NULL, destination, &rect);
   }
 
+  SDL_Surface* get_image() const{
+    return image;
+  }
+
+  bool operator==(const Sprite &other) const{
+    // SDL has defined this operation, so is OK, checks if place in
+    // memory is the same
+    return (image == other.get_image());
+  }
 
 };
+
+
+class SpriteGroup{
+private:
+
+  // pointer, since we don't want a copy of the object but the object itself
+  std::vector<Sprite*> sprites;
+
+  int sprites_size;
+
+public:
+  SpriteGroup copy(){
+    SpriteGroup new_group;
+
+    for(int i = 0; i < sprites.size(); i++){
+      new_group.add(sprites[i]);
+    }
+
+    return new_group;
+  }
+
+  void add(Sprite *sprite){
+    sprites.push_back(sprite);
+    sprites_size = sprites.size();
+  }
+
+  void remove(Sprite sprite_object){
+
+    for(int i=0; i < sprites_size; i++)
+      if( *sprites[i] == sprite_object)
+        sprites.erase(sprites.begin() + i);
+
+    sprites_size = sprites.size();
+  }
+
+  bool has(Sprite sprite_object){
+    for(int i=0; i < sprites_size; i++)
+      if( *sprites[i] == sprite_object)
+        return true;
+    return false;
+  }
+
+
+  void update(){
+    if(!sprites.empty())
+      for(int i=0; i < sprites_size; i++)
+        sprites[i]->update();
+  }
+
+  void draw(SDL_Surface *destination){
+    if(!sprites.empty())
+      for(int i=0; i < sprites_size; i++)
+        sprites[i]->draw(destination);
+  }
+
+  void empty(){
+    sprites.clear();
+    sprites_size = sprites.size();
+  }
+
+  int size(){
+    return sprites_size;
+  }
+
+  std::vector<Sprite*> get_sprites(){
+    return sprites;
+  }
+};
+
+
 
 int main(int argc, char *argv[])
 {
@@ -56,19 +136,27 @@ int main(int argc, char *argv[])
 
 
   if(window == NULL){
-    cout << "Error initializing window: " << endl
-         << SDL_GetError() << endl;
+    std::cout << "Error initializing window: " << std::endl
+              << SDL_GetError() << std::endl;
   }
 
   SDL_Surface *screen = SDL_GetWindowSurface(window);
   Uint32 white = SDL_MapRGB(screen->format, 255, 255, 255);
   Uint32 red = SDL_MapRGB(screen->format, 255, 0, 0);
+  Uint32 blue = SDL_MapRGB(screen->format, 0, 0, 255);
   SDL_FillRect(screen, NULL, white);
 
 
   // Create a sprite, and draw to screen:
   Sprite object(red, window_width/2.0, window_hight/2.0);
-  object.draw(screen);
+  Sprite another(blue, window_width/2.0 -100, window_hight/2.0 +20);
+
+  SpriteGroup active_sprites;
+  active_sprites.add(&object);
+  active_sprites.add(&another);
+
+  active_sprites.draw(screen);
+  //  object.draw(screen);
 
   // Put the white on the actual window (don't need to do this every tic, so outside of loop)
   SDL_UpdateWindowSurface(window);
@@ -101,6 +189,3 @@ int main(int argc, char *argv[])
   SDL_Quit();
   return 0;
 }
-
-
-
