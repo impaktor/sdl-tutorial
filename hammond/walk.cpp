@@ -14,7 +14,7 @@ void cap_framerate(Uint32 starting_tick){
 }
 
 class Sprite{
-private:
+protected:
   SDL_Surface *image;
   SDL_Rect rect;
   int origin_x, origin_y;
@@ -26,8 +26,8 @@ public:
 
     origin_x = rect.x / 2.0; // put in centre of screen
     origin_y = rect.y / 2.0;
-    rect.x = x - origin_x;
-    rect.y = y - origin_y;
+    rect.x = x; // - origin_x; (do this in the inheriting classes instead)
+    rect.y = y; // - origin_y;
   }
 
   void update(){
@@ -120,6 +120,47 @@ public:
 };
 
 
+class Block : public Sprite {
+public:
+  Block(Uint32 color, int x, int y, int w = 48, int h = 64) :
+    Sprite(color, x, y, w, h){
+    update_properites();
+  }
+
+  void update_properites(){
+    origin_x = 0;
+    origin_y = 0;
+
+    set_position(rect.x, rect.y);
+  }
+
+  void set_position(int x, int y){
+    rect.x = x - origin_x;
+    rect.y = y - origin_y;
+  }
+
+  void set_image(const char filename[] = NULL){
+    if( filename != NULL){
+      SDL_Surface *loaded_image = NULL;
+      loaded_image = SDL_LoadBMP(filename);
+
+      if(loaded_image != NULL){
+        image = loaded_image;
+
+        // Note, setting the image, resets the SDL rect, which we
+        // don't want, so:
+        int old_x = rect.x;
+        int old_y = rect.y;
+        rect = image->clip_rect;
+        rect.x = old_x;
+        rect.y = old_y;
+
+        update_properites();
+      }
+    }
+  }
+};
+
 
 int main(int argc, char *argv[])
 {
@@ -147,13 +188,15 @@ int main(int argc, char *argv[])
   SDL_FillRect(screen, NULL, white);
 
 
-  // Create a sprite, and draw to screen:
-  Sprite object(red, window_width/2.0, window_hight/2.0);
-  Sprite another(blue, window_width/2.0 -100, window_hight/2.0 +20);
+  Block block(red, 0,0);
+  block.set_image("sprite.bmp");
+
+  // // Create a sprite, and draw to screen:
+  // Sprite object(red, window_width/2.0, window_hight/2.0);
+  // Sprite another(blue, window_width/2.0 -100, window_hight/2.0 +20);
 
   SpriteGroup active_sprites;
-  active_sprites.add(&object);
-  active_sprites.add(&another);
+  active_sprites.add(&block);
 
   active_sprites.draw(screen);
   //  object.draw(screen);
