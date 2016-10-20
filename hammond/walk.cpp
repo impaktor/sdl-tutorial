@@ -1,4 +1,5 @@
 #include <iostream>
+#include "SDL_image.h"
 #include "SDL.h"
 #include <vector>
 
@@ -142,7 +143,7 @@ public:
   void set_image(const char filename[] = NULL){
     if( filename != NULL){
       SDL_Surface *loaded_image = NULL;
-      loaded_image = SDL_LoadBMP(filename);
+      loaded_image = IMG_Load(filename);
 
       if(loaded_image != NULL){
         image = loaded_image;
