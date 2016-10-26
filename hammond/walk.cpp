@@ -1,7 +1,10 @@
 #include <iostream>
+#include "SDL_mixer.h"
 #include "SDL_image.h"
 #include "SDL.h"
 #include <vector>
+#include "sprite.h"
+#include "spritegroup.h"
 
 //using namespace std;
 
@@ -13,112 +16,6 @@ void cap_framerate(Uint32 starting_tick){
   if((1000/fps) > SDL_GetTicks() - starting_tick)
     SDL_Delay(1000/fps - (SDL_GetTicks() - starting_tick));
 }
-
-class Sprite{
-protected:
-  SDL_Surface *image;
-  SDL_Rect rect;
-  int origin_x, origin_y;
-public:
-  Sprite(Uint32 color, int x, int y, int w = 48, int h = 64){
-    image = SDL_CreateRGBSurface(0, w, h, 32, 0,0,0,0);
-    SDL_FillRect(image, NULL, color);
-    rect = image->clip_rect;
-
-    origin_x = rect.x / 2.0; // put in centre of screen
-    origin_y = rect.y / 2.0;
-    rect.x = x; // - origin_x; (do this in the inheriting classes instead)
-    rect.y = y; // - origin_y;
-  }
-
-  void update(){
-    //can be overridden
-
-  }
-
-  void draw(SDL_Surface *destination){
-    SDL_BlitSurface(image, NULL, destination, &rect);
-  }
-
-  SDL_Surface* get_image() const{
-    return image;
-  }
-
-  bool operator==(const Sprite &other) const{
-    // SDL has defined this operation, so is OK, checks if place in
-    // memory is the same
-    return (image == other.get_image());
-  }
-
-};
-
-
-class SpriteGroup{
-private:
-
-  // pointer, since we don't want a copy of the object but the object itself
-  std::vector<Sprite*> sprites;
-
-  int sprites_size;
-
-public:
-  SpriteGroup copy(){
-    SpriteGroup new_group;
-
-    for(int i = 0; i < sprites.size(); i++){
-      new_group.add(sprites[i]);
-    }
-
-    return new_group;
-  }
-
-  void add(Sprite *sprite){
-    sprites.push_back(sprite);
-    sprites_size = sprites.size();
-  }
-
-  void remove(Sprite sprite_object){
-
-    for(int i=0; i < sprites_size; i++)
-      if( *sprites[i] == sprite_object)
-        sprites.erase(sprites.begin() + i);
-
-    sprites_size = sprites.size();
-  }
-
-  bool has(Sprite sprite_object){
-    for(int i=0; i < sprites_size; i++)
-      if( *sprites[i] == sprite_object)
-        return true;
-    return false;
-  }
-
-
-  void update(){
-    if(!sprites.empty())
-      for(int i=0; i < sprites_size; i++)
-        sprites[i]->update();
-  }
-
-  void draw(SDL_Surface *destination){
-    if(!sprites.empty())
-      for(int i=0; i < sprites_size; i++)
-        sprites[i]->draw(destination);
-  }
-
-  void empty(){
-    sprites.clear();
-    sprites_size = sprites.size();
-  }
-
-  int size(){
-    return sprites_size;
-  }
-
-  std::vector<Sprite*> get_sprites(){
-    return sprites;
-  }
-};
 
 
 class Block : public Sprite {
@@ -205,7 +102,16 @@ int main(int argc, char *argv[])
   // Put the white on the actual window (don't need to do this every tic, so outside of loop)
   SDL_UpdateWindowSurface(window);
 
+  //Initialize SDL2_mixer (Don't use SDL_OpenAudio(), but the Mix_OpenAudio)
+  Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 4096);
+  Mix_Chunk *sound = NULL;
+  sound = Mix_LoadWAV("sound.wav");
+  Mix_PlayChannel(-1, sound, 0);
 
+  // Now play around with palying music, using SDL2_mixer
+  Mix_Music *music = NULL;
+  music = Mix_LoadMUS("music.wav");
+  Mix_PlayMusic(music, -1);
 
   SDL_Event event;
   bool is_running = true;
@@ -225,11 +131,12 @@ int main(int argc, char *argv[])
   }
 
 
+  Mix_FreeChunk(sound);
+  sound = NULL;
 
   //SDL_Delay(3000);
-
+  Mix_CloseAudio();
   SDL_DestroyWindow(window);
-
   SDL_Quit();
   return 0;
 }
