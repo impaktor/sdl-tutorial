@@ -1,0 +1,8 @@
+This just collects some SDL tutorials I've followed, in C++. The different
+lessons are in the git log history.
+
+- John Hammond's [[https://www.youtube.com/watch?v%3DiggmjJ_C_C4][youtube]] lessons.
+
+- Will Usher has some nice [[http://www.willusher.io/sdl2%2520tutorials/2013/08/17/lesson-1-hello-world][tutorials]].
+
+- LazyFoo. He's now updated them to [[http://lazyfoo.net/tutorials/SDL/index.php][SDL2]]. (I haven't uploaded my files).
