@@ -83,15 +83,22 @@ int main(int argc, char *argv[])
   Uint32 white = SDL_MapRGB(screen->format, 255, 255, 255);
   Uint32 red = SDL_MapRGB(screen->format, 255, 0, 0);
   Uint32 blue = SDL_MapRGB(screen->format, 0, 0, 255);
+
+  // Set entire background to white:
   SDL_FillRect(screen, NULL, white);
 
-
-  Block block(red, 0,0);
+  Block block(red, 0, 0);
   block.set_image("sprite.bmp");
 
-  // // Create a sprite, and draw to screen:
-  // Sprite object(red, window_width/2.0, window_hight/2.0);
-  // Sprite another(blue, window_width/2.0 -100, window_hight/2.0 +20);
+
+  // Create a sprite (to be moved by arrow keys), and draw to screen:
+  Sprite left(red, window_width/2.0+5, window_hight/2.0, 10, 10);
+  Sprite right(blue, window_width/2.0-5, window_hight/2.0, 10, 10);
+  SpriteGroup cursor_sprites;
+  cursor_sprites.add(&left);
+  cursor_sprites.add(&right);
+  cursor_sprites.draw(screen);
+
 
   SpriteGroup active_sprites;
   active_sprites.add(&block);
@@ -121,15 +128,39 @@ int main(int argc, char *argv[])
     starting_tick = SDL_GetTicks();
 
     while(SDL_PollEvent(&event)){
+      std::cout << "-\t"  << std::endl;
       if(event.type == SDL_QUIT){
         is_running = false;
         break;
       }
     }
 
+    const Uint8 *keystates = SDL_GetKeyboardState( NULL );
+
+    //If up is pressed
+    // if(keystates[SDLK_q]){  // BUG: never triggered
+    if(keystates[SDL_SCANCODE_Q] || keystates[SDL_SCANCODE_ESCAPE]){ // works fine!
+      is_running = false;
+      std::cout << "pressed Q or ESC " << std::endl;
+      SDL_Log("Q or ESC was pressed");
+    }
+
+    //If up is pressed
+    if(keystates[SDL_SCANCODE_LEFT]){
+    //if(keystates[SDLK_LEFT]){  // segfaults
+      std::cout << "pressed LEFT " << std::endl;
+      SDL_Log("Left was pressed");
+//      cursor_sprites.
+    }
+
+    std::cout << "." << std::flush;
+
+    // SDL_RenderPresent(screen);
     cap_framerate(starting_tick);
   }
 
+
+  // CLEAN UP -------
 
   Mix_FreeChunk(sound);
   sound = NULL;
@@ -138,5 +169,6 @@ int main(int argc, char *argv[])
   Mix_CloseAudio();
   SDL_DestroyWindow(window);
   SDL_Quit();
+
   return 0;
 }
